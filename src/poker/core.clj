@@ -1,14 +1,16 @@
-(ns poker.core)
+(ns poker.core
+  (:use [clojure.contrib.datalog.util :only (reverse-map)])
+  (:use [clojure.contrib.string :only (split)]))
 
 ;; initialize
 (def ranks [:ace :two :three :four :five :six :seven :eight :nine :ten :jack :queen :king ])
 (def ranks-display {:ace "A" :two "2" :three "3" :four "4" :five "5" :six "6" :seven "7" :eight "8" :nine "9" :ten "T" :jack "J" :queen "Q" :king "K"})
-(def reverse-ranks-display (clojure.contrib.datalog.util/reverse-map ranks-display))
+(def reverse-ranks-display (reverse-map ranks-display))
 (def rank-order (zipmap ranks (iterate inc 1)))
 
 (def suits [:club :diamond :heart :spade ])
 (def suits-display {:club "C" :diamond "D" :heart "H" :spade "S"})
-(def reverse-suits-display (clojure.contrib.datalog.util/reverse-map suits-display))
+(def reverse-suits-display (reverse-map suits-display))
 
 ; verify rank/suit?
 (defrecord Card [rank suit])
@@ -20,7 +22,7 @@
   (Card. (get reverse-ranks-display (str R)) (get reverse-suits-display (str S))))
 
 (defn to-cards [X]
-  (map make-card (clojure.contrib.string/split #"-" X)))
+  (map make-card (split #"-" X)))
 
 (defn make-suit [suit]
   (vec (map #(Card. % suit) ranks)))
@@ -34,7 +36,6 @@
 
 (def hand-ranks [:straight-flush :four-of-a-kind :full-house :flush :straight :three-of-a-kind :two-pair :pair :high-card ])
 (def hand-order (zipmap hand-ranks (iterate inc 1)))
-(def hand-rank-tests [straight-flush? four-of-a-kind? full-house? flush? straight? three-of-a-kind? two-pair? pair?])
 
 (defn valid-hand? [x]
   (and (= 5 (count x))
@@ -126,6 +127,8 @@
                                                                                               :two-pair (if (pair? hand)
                                                                                                           :pair :high-card )))))))))
 
+(def hand-rank-tests [straight-flush? four-of-a-kind? full-house? flush? straight? three-of-a-kind? two-pair? pair?])
+
 ;; generate
 (defn random-hand []
   (take 5 (shuffle deck)))
@@ -143,3 +146,5 @@
 
 (defn sort-by-hand [summary]
   (sort-by (fn [[hand freq]] (get hand-order hand)) summary))
+
+(sort-by-freq (summarize (sample-hands 10000)))
